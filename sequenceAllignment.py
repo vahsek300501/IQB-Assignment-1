@@ -10,7 +10,9 @@ class Sequence(object):
 		self.n = len(self.sequence1)
 		self.m = len(self.sequence2)
 		self.dpMatGlobal = []
+		self.dpMatLocal = []
 		self.globalSequences = []
+		self.localSequences = []
 
 		for i in range(0,self.m+1):
 			tmpRow = []
@@ -18,12 +20,22 @@ class Sequence(object):
 				tmpRow.append(0)
 			self.dpMatGlobal.append(tmpRow)
 
+		for i in range(0,self.m+1):
+			tmpRow = []
+			for j in range(0,self.n+1):
+				tmpRow.append(0)
+			self.dpMatLocal.append(tmpRow)
+
 	# Function to print DP Matrix
 	def printdpMatGlobal(self):
 		for row in self.dpMatGlobal:
 			print(row)
 
-	# Function to fill DP matrix in bottom up approach
+	def printdpMatLocal(self):
+		for row in self.dpMatLocal:
+			print(row)
+
+	# Function to fill DP matrix in bottom up approach for global alignment
 	def globalAlignmentMatrix(self):
 		for i in range(1,self.n+1):
 			self.dpMatGlobal[0][i] = self.dpMatGlobal[0][i-1] + self.gapScore
@@ -41,6 +53,25 @@ class Sequence(object):
 					alignScore = self.dpMatGlobal[i-1][j-1] + self.missMatchScore
 				self.dpMatGlobal[i][j] = max(gap1,max(gap2,alignScore))
 
+	# Function to fill DP matrix in bottom up approach for local alignment
+	def localAlignmentMatrix(self):
+		for i in range(1,self.n+1):
+			self.dpMatLocal[0][i] = 0
+		for i in range(1,self.m+1):
+			self.dpMatLocal[i][0] = 0
+
+		for i in range(1,self.m+1):
+			for j in range(1,self.n+1):
+				gap1 = self.dpMatLocal[i-1][j] + self.gapScore
+				gap2 = self.dpMatLocal[i][j-1] + self.gapScore
+				alignScore = -999999999
+				if self.sequence1[j-1] == self.sequence2[i-1]:
+					alignScore = self.dpMatLocal[i-1][j-1] + self.matchScore
+				else:
+					alignScore = self.dpMatLocal[i-1][j-1] + self.missMatchScore
+				self.dpMatLocal[i][j] = max(gap1,max(gap2,max(alignScore,0)))
+
+	# Recursive Function to generate all the optimal global alignment sequences
 	def generateAllPossibleGlobalAlignmentUtil(self,seq1,seq2,ansSeq1,ansSeq2,cntScore):
 		if len(seq1) == 0 and len(seq2) == 0:
 			self.globalSequences.append((ansSeq1,ansSeq2,cntScore))
@@ -63,19 +94,77 @@ class Sequence(object):
 
 		self.generateAllPossibleGlobalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore+self.gapScore)
 
-		
-		
-
 	def generateAllGlobalAlignments(self):
 		self.generateAllPossibleGlobalAlignmentUtil(self.sequence1,self.sequence2,"","",0)
 		for val in self.globalSequences:
 			if val[2] == self.dpMatGlobal[self.m][self.n]:
 				print(val)
 
+	def generateAllLocalAlignmentUtil(self,seq1,seq2,ansSeq1,ansSeq2,cntScore):
+		if len(seq1) == 0 and len(seq2) == 0:
+			if cntScore <= 0:
+				self.localSequences.append((ansSeq1,ansSeq2,0))
+			else:
+				self.localSequences.append((ansSeq1,ansSeq2,cntScore))
+			return
 
-mySeq = Sequence("ATCAGAGTA","TTCAGTA",2,-1,-2)
+		if len(seq1) == 0:
+			if(cntScore + self.gapScore <= 0):
+				self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], 0)
+			else:
+				self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore+self.gapScore)
+			return
+
+		if len(seq2) == 0:
+			if(cntScore+ self.gapScore <= 0):
+				self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", 0)
+			else:
+				self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", cntScore + self.gapScore)
+			return
+
+		if seq1[0] == seq2[0]:
+			if(cntScore + self.matchScore <= 0):
+				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], 0)
+			else:
+				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], cntScore + self.matchScore)
+		else:
+			if(cntScore + self.missMatchScore <= 0):
+				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], 0)
+			else:
+				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], cntScore + self.missMatchScore)
+		
+
+		if(cntScore + self.gapScore <= 0):
+			self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", 0)
+			self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], 0)
+		else:
+			self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", cntScore + self.gapScore)
+			self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore + self.gapScore)
+
+	def generateAllLocalAlignment(self):
+		self.generateAllLocalAlignmentUtil(self.sequence1, self.sequence2, "", "", 0)
+		for val in self.localSequences:
+			if val[2] == self.dpMatLocal[self.m][self.n]:
+				print(val)
+
+		
+		
+
+	
+
+
+mySeq = Sequence("ATCAGAGTA","TTCAGTA",2,-1,-1)
 mySeq.globalAlignmentMatrix()
 mySeq.generateAllGlobalAlignments()
 print()
 print()
 mySeq.printdpMatGlobal()
+print()
+print()
+mySeq.localAlignmentMatrix()
+print()
+print()
+mySeq.printdpMatLocal()
+print()
+print()
+mySeq.generateAllLocalAlignment()
