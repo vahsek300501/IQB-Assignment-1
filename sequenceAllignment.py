@@ -1,4 +1,6 @@
 import pdb
+from prettytable import PrettyTable
+
 class Sequence(object):
 	"""Class to define sequence and function related to it"""
 	def __init__(self, p_sequence1,p_sequence2,p_matchScore,p_missScore,p_gapScore):
@@ -28,12 +30,17 @@ class Sequence(object):
 
 	# Function to print DP Matrix
 	def printdpMatGlobal(self):
-		for row in self.dpMatGlobal:
-			print(row)
+		tmpMat = self.dpMatGlobal.copy()
+		t = PrettyTable()
+		for row in tmpMat:
+			t.add_row(row)
+		print(t)
 
 	def printdpMatLocal(self):
 		for row in self.dpMatLocal:
-			print(row)
+			for val in row:
+				print(val,end = " ")
+			print()
 
 	# Function to fill DP matrix in bottom up approach for global alignment
 	def globalAlignmentMatrix(self):
@@ -78,11 +85,11 @@ class Sequence(object):
 			return
 
 		if len(seq1) == 0:
-			self.generateAllPossibleGlobalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore+self.gapScore)
+			self.generateAllPossibleGlobalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_", ansSeq2+seq2[0], cntScore+self.gapScore)
 			return
 
 		if len(seq2) == 0:
-			self.generateAllPossibleGlobalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", cntScore + self.gapScore)
+			self.generateAllPossibleGlobalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_", cntScore + self.gapScore)
 			return
 
 		if seq1[0] == seq2[0]:
@@ -90,81 +97,38 @@ class Sequence(object):
 		else:
 			self.generateAllPossibleGlobalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], cntScore + self.missMatchScore)
 		
-		self.generateAllPossibleGlobalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", cntScore + self.gapScore)
+		self.generateAllPossibleGlobalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_", cntScore + self.gapScore)
 
-		self.generateAllPossibleGlobalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore+self.gapScore)
+		self.generateAllPossibleGlobalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_", ansSeq2+seq2[0], cntScore+self.gapScore)
 
 	def generateAllGlobalAlignments(self):
 		self.generateAllPossibleGlobalAlignmentUtil(self.sequence1,self.sequence2,"","",0)
+		ans = []
 		for val in self.globalSequences:
 			if val[2] == self.dpMatGlobal[self.m][self.n]:
-				print(val)
+				ans.append(val)
 
-	def generateAllLocalAlignmentUtil(self,seq1,seq2,ansSeq1,ansSeq2,cntScore):
-		if len(seq1) == 0 and len(seq2) == 0:
-			if cntScore <= 0:
-				self.localSequences.append((ansSeq1,ansSeq2,0))
-			else:
-				self.localSequences.append((ansSeq1,ansSeq2,cntScore))
-			return
+		for val in ans:
+			for i in range(0,len(val[0])):
+				print(val[0][i]+" ",end = "")
+			print()
+			for i in range(0,len(val[1])):
+				print(val[1][i]+" ",end = "")
+			print()
+			print()
+def main():
+	mySeq = Sequence("ATCAGAGTA","TTCAGTA",2,-1,-1)
+	print()
+	print("GLOBAL SEQUENCE ALIGNMENT")
+	print()
+	print("**************2-D Array for optimal Global Sequence Alignment************")	
+	print()
+	mySeq.globalAlignmentMatrix()
+	mySeq.printdpMatGlobal()
+	print()
+	print()
+	print("**************Optimal Sequence Alignments*********************************")
+	print()
+	mySeq.generateAllGlobalAlignments()
 
-		if len(seq1) == 0:
-			if(cntScore + self.gapScore <= 0):
-				self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], 0)
-			else:
-				self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore+self.gapScore)
-			return
-
-		if len(seq2) == 0:
-			if(cntScore+ self.gapScore <= 0):
-				self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", 0)
-			else:
-				self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", cntScore + self.gapScore)
-			return
-
-		if seq1[0] == seq2[0]:
-			if(cntScore + self.matchScore <= 0):
-				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], 0)
-			else:
-				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], cntScore + self.matchScore)
-		else:
-			if(cntScore + self.missMatchScore <= 0):
-				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], 0)
-			else:
-				self.generateAllLocalAlignmentUtil(seq1[1:], seq2[1:], ansSeq1 + seq1[0], ansSeq2 + seq2[0], cntScore + self.missMatchScore)
-		
-
-		if(cntScore + self.gapScore <= 0):
-			self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", 0)
-			self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], 0)
-		else:
-			self.generateAllLocalAlignmentUtil(seq1[1:], seq2, ansSeq1 + seq1[0], ansSeq2+"_ ", cntScore + self.gapScore)
-			self.generateAllLocalAlignmentUtil(seq1, seq2[1:], ansSeq1+"_ ", ansSeq2+seq2[0], cntScore + self.gapScore)
-
-	def generateAllLocalAlignment(self):
-		self.generateAllLocalAlignmentUtil(self.sequence1, self.sequence2, "", "", 0)
-		for val in self.localSequences:
-			if val[2] == self.dpMatLocal[self.m][self.n]:
-				print(val)
-
-		
-		
-
-	
-
-
-mySeq = Sequence("ATCAGAGTA","TTCAGTA",2,-1,-1)
-mySeq.globalAlignmentMatrix()
-mySeq.generateAllGlobalAlignments()
-print()
-print()
-mySeq.printdpMatGlobal()
-print()
-print()
-mySeq.localAlignmentMatrix()
-print()
-print()
-mySeq.printdpMatLocal()
-print()
-print()
-mySeq.generateAllLocalAlignment()
+main()
