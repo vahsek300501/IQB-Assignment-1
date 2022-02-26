@@ -35,12 +35,11 @@ class LocalAlignment(object):
 					alignScore = self.dpMatLocal[i-1][j-1] + self.missMatchScore
 				self.dpMatLocal[i][j] = max(gap1,max(gap2,max(alignScore,0)))
 
+	# Function to get optimal local alignment
 	def getOptimalAlignment(self, seq1, seq2, i, j, ansSeq1, ansSeq2, cntScore):
-		if i <= 0 or j <= 0:
-			self.localSequences.append((ansSeq1,ansSeq2,cntScore))
-			return
 		if self.dpMatLocal[i][j] == 0:
 			self.localSequences.append((ansSeq1,ansSeq2,cntScore))
+			return
 
 		if self.dpMatLocal[i-1][j] + self.gapScore == self.dpMatLocal[i][j]:
 			self.getOptimalAlignment(seq1, seq2, i-1, j, "_"+ansSeq1, seq2[i-1]+ansSeq2, max(cntScore + self.gapScore,0))
@@ -54,8 +53,12 @@ class LocalAlignment(object):
 		if seq1[j-1] != seq2[i-1] and self.dpMatLocal[i-1][j-1] + self.missMatchScore == self.dpMatLocal[i][j]:
 			self.getOptimalAlignment(seq1, seq2, i-1, j-1, seq1[j-1]+ansSeq1,seq2[i-1]+ansSeq2, max(cntScore + self.missMatchScore,0))
 
+	# function to call getOptimalAlignment method
 	def optimalAlignment(self):
-		self.getOptimalAlignment(self.sequence1,self.sequence2,self.m,self.n,"","",0)
+		for i in range(0,self.m+1):
+			for j in range(0,self.n+1):
+				if self.dpMatLocal[i][j] == self.dpMatLocal[self.m][self.n]:
+					self.getOptimalAlignment(self.sequence1,self.sequence2,i,j,"","",0)
 
 	def printMat(self):
 		for row in self.dpMatLocal:
