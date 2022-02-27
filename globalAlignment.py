@@ -1,5 +1,8 @@
-import pdb
+import numpy as np
+import pandas as pd
+
 class GlobalAlignment(object):
+	
 	"""Class to define sequence and function related to it"""
 	def __init__(self, p_sequence1,p_sequence2,p_matchScore,p_missScore,p_gapScore):
 		self.sequence1 = p_sequence1
@@ -18,9 +21,6 @@ class GlobalAlignment(object):
 				tmpRow.append(0)
 			self.dpMatGlobal.append(tmpRow)
 
-	def printMatrix(self):
-		for row in self.dpMatGlobal:
-			print(row)
 
 
 	# Function to fill DP matrix in bottom up approach for global alignment
@@ -63,13 +63,58 @@ class GlobalAlignment(object):
 	def optimalAlignment(self):
 		self.getOptimalAlignment(self.sequence1,self.sequence2,self.m,self.n,"","",0)
 
+	# Function to print the dp matrix
+	def printMatrix(self):
+		colIndex = [ch for ch in self.sequence1]
+		rowIndex = [ch for ch in self.sequence2]
+		rowIndex.insert(0," ")
+		colIndex.insert(0," ")
+		df = pd.DataFrame(np.array(self.dpMatGlobal), columns = colIndex, index = rowIndex)
+		print()
+		print("Matrix Alignment")
+		print(df)
+		print()
+		print()
 
-	def printMat(self):
-		for val in self.globalSequences:
-			print(val)
+	# function to print the sequences
+	def printSequences(self):
+		for seq in self.globalSequences:
+			for i in range(0,len(seq[0])):
+				print(seq[0][i],end = " ")
+			print()
+			for i in range(0,len(seq[1])):
+				print(seq[1][i],end = " ")
+			print()
+			print("Score Value: "+str(seq[2]))
+			print()
+			print()
 
-mySeq = GlobalAlignment("ATCAGAGTA","TTCAGTA",2,-1,-1)
-mySeq.globalAlignmentMatrix()
-mySeq.printMatrix()
-mySeq.optimalAlignment()
-mySeq.printMat()
+# Main Function
+def main():
+
+	print("GLOBAL SEQUENCE ALIGNMENT")
+	print()
+	print()
+
+	print("Scoring Values-1")
+	print("Match Score: 2   Miss Score: -1   Gap Score: -1")
+	print()
+
+	mySeq1 = GlobalAlignment("ATCAGAGTA","TTCAGTA",2,-1,-1)
+	mySeq1.globalAlignmentMatrix()
+	mySeq1.printMatrix()
+	mySeq1.optimalAlignment()
+	mySeq1.printSequences()
+	print()
+
+	print("Scoring Values-2")
+	print("Match Score: 2   Miss Score: -1   Gap Score: -2")
+	print()
+
+	mySeq2 = GlobalAlignment("ATCAGAGTA","TTCAGTA",2,-1,-2)
+	mySeq2.globalAlignmentMatrix()
+	mySeq2.printMatrix()
+	mySeq2.optimalAlignment()
+	mySeq2.printSequences()
+
+main()
