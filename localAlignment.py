@@ -63,6 +63,7 @@ class LocalAlignment(object):
 				if self.dpMatLocal[i][j] == self.dpMatLocal[self.m][self.n]:
 					self.getOptimalAlignment(self.sequence1,self.sequence2,i,j,"","",0)
 
+	# Function to print the matrix
 	def printMatrix(self):
 		colIndex = [ch for ch in self.sequence1]
 		rowIndex = [ch for ch in self.sequence2]
@@ -75,6 +76,7 @@ class LocalAlignment(object):
 		print()
 		print()
 
+	# Function to print the aligned Sequences
 	def printSequences(self):
 		for seq in self.localSequences:
 			for i in range(0,len(seq[0])):
